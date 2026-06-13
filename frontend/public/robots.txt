@@ -1,0 +1,7 @@
+# CampusIQ
+# Student Grade Management System
+
+User-agent: *
+Allow: /
+
+Sitemap: http://localhost:3000/sitemap.xml

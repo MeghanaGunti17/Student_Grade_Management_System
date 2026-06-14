@@ -2,6 +2,9 @@
 
 A full-stack MERN application for managing student academic records, attendance, results, analytics, and performance reports.
 
+<img width="1920" height="910" alt="image" src="https://github.com/user-attachments/assets/697932a0-04b3-4916-a0d9-db47f00069b8" />
+
+
 ## 🚀 Features
 
 ### 👨‍💼 Admin

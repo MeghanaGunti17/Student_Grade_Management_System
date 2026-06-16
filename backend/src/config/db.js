@@ -19,6 +19,7 @@ const connectDB = async () => {
       logger.warn('MongoDB disconnected — retrying...');
     });
 
+    logger.info(`MongoDB Connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
     logger.error(`MongoDB connection failed: ${error.message}`);

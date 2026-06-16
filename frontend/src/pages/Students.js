@@ -30,7 +30,6 @@ function StudentModal({ open, onClose, onSave, initial }) {
       toast.error(err?.response?.data?.message || 'Operation failed');
     } finally { setLoading(false); }
   };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
@@ -96,6 +95,7 @@ function RiskBar({ score }) {
 export default function Students() {
   const [students, setStudents]   = useState([]);
   const [search, setSearch]       = useState('');
+  console.log("students state =", students);
   const [semFilter, setSemFilter] = useState('');
   const [loading, setLoading]     = useState(true);
   const [page, setPage]           = useState(1);
@@ -106,28 +106,57 @@ export default function Students() {
   const limit = 15;
 
   const fetchStudents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page, limit });
-      if (search)    params.set('search', search);
-      if (semFilter) params.set('semester', semFilter);
-      const { data } = await API.get(`/students?${params}`);
-      setStudents(data.data || []);
-      setTotal(data.total || 0);
-    } catch { toast.error('Failed to load students'); }
-    finally  { setLoading(false); }
-  }, [page, search, semFilter]);
+  setLoading(true);
 
-  useEffect(() => { fetchStudents(); }, [fetchStudents]);
+  try {
+    const params = new URLSearchParams({
+      page,
+      limit,
+    });
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Deactivate ${name}?`)) return;
-    try {
-      await API.delete(`/students/${id}`);
-      toast.success('Student deactivated');
-      fetchStudents();
-    } catch (err) { toast.error(err?.response?.data?.message || 'Failed'); }
-  };
+    if (search) {
+      params.set("search", search);
+    }
+
+    if (semFilter) {
+      params.set("semester", semFilter);
+    }
+
+    const { data } = await API.get(`/students?${params}`);
+
+    console.log("API RESPONSE:", data);
+    console.log("STUDENTS:", data.data);
+
+    setStudents(data.data || []);
+    console.log("AFTER SET =", data.data);
+    setTotal(data.total || 0);
+  } catch (err) {
+    console.error("FETCH STUDENTS ERROR:", err);
+    toast.error("Failed to load students");
+  } finally {
+    setLoading(false);
+  }
+}, [page, search, semFilter]);
+
+useEffect(() => {
+  fetchStudents();
+}, [fetchStudents]);
+
+const handleDelete = async (id, name) => {
+  if (!window.confirm(`Deactivate ${name}?`)) return;
+
+  try {
+    await API.delete(`/students/${id}`);
+
+    toast.success("Student deactivated");
+
+    fetchStudents();
+  } catch (err) {
+    toast.error(
+      err?.response?.data?.message || "Failed"
+    );
+  }
+};
 
   const totalPages = Math.ceil(total / limit);
 

@@ -41,34 +41,70 @@ export default function StudentDashboard() {
     }).finally(() => setLoading(false));
   }, [name]);
 
-  // Calculations
-  const published = results.filter(r => r.isPublished !== false);
-  const totalSubjects = published.length;
-  const totalMarks    = published.reduce((s,r) => s + (r.marksObtained||0), 0);
-  const avgMarks      = totalSubjects > 0 ? (totalMarks / totalSubjects).toFixed(1) : '—';
-  const highest       = totalSubjects > 0 ? Math.max(...published.map(r => r.marksObtained||0)) : 0;
-  const validResults =
-  published.filter(
-    r =>
-      r.gradePoints !== undefined
-  );
+// Calculations
+const published = results.filter(
+  r => r.isPublished !== false
+);
+
+const totalSubjects = published.length;
+
+const totalMarks = published.reduce(
+  (sum, r) => sum + (r.marksObtained || 0),
+  0
+);
+
+const avgMarks =
+  totalSubjects > 0
+    ? (totalMarks / totalSubjects).toFixed(1)
+    : "0";
+
+const highest =
+  totalSubjects > 0
+    ? Math.max(
+        ...published.map(
+          r => r.marksObtained || 0
+        )
+      )
+    : 0;
 
 const cgpa =
-  validResults.length
+  totalSubjects > 0
     ? (
-        validResults.reduce(
-          (sum, r) =>
-            sum +
-            (r.gradePoints || 0),
+        published.reduce(
+          (sum, r) => {
+            const percent =
+              ((r.marksObtained || 0) /
+                (r.maxMarks || 100)) *
+              100;
+
+            let gp = 0;
+
+            if (percent >= 90) gp = 10;
+            else if (percent >= 80) gp = 9;
+            else if (percent >= 70) gp = 8;
+            else if (percent >= 60) gp = 7;
+            else if (percent >= 50) gp = 6;
+            else if (percent >= 40) gp = 5;
+
+            return sum + gp;
+          },
           0
-        ) /
-        validResults.length
+        ) / totalSubjects
       ).toFixed(2)
-    : "0.00"
-    ? (published.reduce((s,r) => s+(r.gradePoints||0), 0) / published.filter(r=>r.gradePoints>0).length).toFixed(2)
-    : '—';
-  const passCount     = published.filter(r => (r.marksObtained||0) >= (r.maxMarks||100)*0.4).length;
-  const passRate      = totalSubjects > 0 ? Math.round((passCount/totalSubjects)*100) : 0;
+    : "0.00";
+
+const passCount = published.filter(
+  r =>
+    (r.marksObtained || 0) >=
+    (r.maxMarks || 100) * 0.4
+).length;
+
+const passRate =
+  totalSubjects > 0
+    ? Math.round(
+        (passCount / totalSubjects) * 100
+      )
+    : 0;
 
   const chartData = published.map(r => ({
     subject:  (r.subjectName||'').length > 10 ? r.subjectName.slice(0,10)+'…' : r.subjectName,

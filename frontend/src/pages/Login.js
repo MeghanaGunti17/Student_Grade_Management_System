@@ -16,7 +16,10 @@ export default function Login() {
     if (!form.email || !form.password) { toast.error('Please fill all fields'); return; }
     setLoading(true);
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', form);
+      const { data } = await axios.post(
+  "https://campusiq-backend-5tb3.onrender.com/api/auth/login",
+  form
+);
       const { token, refreshToken, user } = data;
 
       localStorage.setItem('token',        token);

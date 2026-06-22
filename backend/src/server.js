@@ -8,7 +8,7 @@ const compression = require("compression");
 const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
 const { Server } = require("socket.io");
-
+const cors = require("cors");
 const { connectDB } = require("./config/db");
 const { setupSocket } = require("./config/socket");
 

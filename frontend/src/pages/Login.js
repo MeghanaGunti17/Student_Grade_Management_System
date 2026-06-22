@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-
+import API from "../services/api";
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email:'', password:'', role:'student' });
@@ -11,35 +10,88 @@ export default function Login() {
 
   const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!form.email || !form.password) { toast.error('Please fill all fields'); return; }
-    setLoading(true);
-    try {
-      const { data } = await axios.post(
-  "https://campusiq-backend-5tb3.onrender.com/api/auth/login",
-  form
-);
-      const { token, refreshToken, user } = data;
+const handleLogin = async (e) => {
+  e.preventDefault();
 
-      localStorage.setItem('token',        token);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user',         JSON.stringify(user));
-      localStorage.setItem('role',         user.role);
-      localStorage.setItem('userName',     user.name);
-      localStorage.setItem('userEmail',    user.email);
+  if (!form.email || !form.password) {
+    toast.error("Please fill all fields");
+    return;
+  }
 
-      toast.success(`Welcome back, ${user.name.split(' ')[0]}! 🚀`);
+  setLoading(true);
 
-      if (user.role === 'admin')   navigate('/dashboard');
-      else if (user.role === 'faculty') navigate('/faculty-dashboard');
-      else navigate('/student-dashboard');
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
+  try {
+    const response = await API.post(
+      "/auth/login",
+      form
+    );
+
+    const data = response.data;
+
+    const token = data.token;
+    const refreshToken =
+      data.refreshToken;
+
+    const user = data.user;
+
+    localStorage.setItem(
+      "token",
+      token
+    );
+
+    localStorage.setItem(
+      "refreshToken",
+      refreshToken
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
+
+    localStorage.setItem(
+      "role",
+      user.role
+    );
+
+    localStorage.setItem(
+      "userName",
+      user.name
+    );
+
+    localStorage.setItem(
+      "userEmail",
+      user.email
+    );
+
+    toast.success(
+      `Welcome back, ${user.name}!`
+    );
+
+    if (user.role === "admin") {
+      navigate("/dashboard");
+    } else if (
+      user.role === "faculty"
+    ) {
+      navigate(
+        "/faculty-dashboard"
+      );
+    } else {
+      navigate(
+        "/student-dashboard"
+      );
     }
-  };
+  } catch (err) {
+    console.error(err);
+
+    toast.error(
+      err?.response?.data?.message ||
+        "Login failed"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>

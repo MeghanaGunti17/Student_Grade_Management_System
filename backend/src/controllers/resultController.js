@@ -2,6 +2,7 @@
   const Student = require("../models/Student");
   const ActivityLog = require("../models/ActivityLog");
   const User = require("../models/User");
+  const Notification = require("../models/Notification");
   /* ── GET ALL RESULTS ── */
   exports.getAllResults = async (req, res, next) => {
     try {
@@ -225,79 +226,140 @@
   };
 
   /* ── PUBLISH/UNPUBLISH RESULTS ── */
-  exports.togglePublish = async (req, res, next) => {
-    try {
-      const result = await Result.findById(req.params.id);
-      if (!result) return res.status(404).json({ success: false, message: "Result not found" });
-
-      result.isPublished = !result.isPublished;
-      await result.save();
-
-      res.json({
-        success: true,
-        message: result.isPublished ? "Result published" : "Result unpublished",
-        data: result,
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  /* ── GET GRADE DISTRIBUTION ── */
-  exports.getGradeDistribution = async (req, res, next) => {
+  /* ── PUBLISH/UNPUBLISH RESULTS ── */
+exports.togglePublish = async (req, res, next) => {
   try {
-    const results = await Result.find();
+    const result = await Result.findById(
+      req.params.id
+    );
 
-    const grades = {
-      O: 0,
-      "A+": 0,
-      A: 0,
-      "B+": 0,
-      B: 0,
-      C: 0,
-      F: 0,
-    };
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Result not found",
+      });
+    }
 
-    results.forEach((result) => {
-      const percentage =
-        (result.marksObtained /
-          result.maxMarks) *
-        100;
+    result.isPublished =
+      !result.isPublished;
 
-      if (percentage >= 90)
-        grades["O"]++;
+    await result.save();
 
-      else if (percentage >= 80)
-        grades["A+"]++;
+   /* Notification */
 
-      else if (percentage >= 70)
-        grades["A"]++;
+if (
+  result.isPublished &&
+  result.student
+) {
+  const student =
+    await Student.findById(
+      result.student
+    );
 
-      else if (percentage >= 60)
-        grades["B+"]++;
+  if (student?.user) {
+    await Notification.create({
+      recipient:
+        student.user,
 
-      else if (percentage >= 50)
-        grades["B"]++;
+      type:
+        "result_published",
 
-      else if (percentage >= 40)
-        grades["C"]++;
+      priority:
+        "medium",
 
-      else grades["F"]++;
-    });
+      title:
+        "Result Published",
 
-    const distribution =
-      Object.entries(grades).map(
-        ([grade, count]) => ({
-          _id: grade,
-          count,
-        })
-      );
-
+      message:
+        `${result.subjectName} result has been published`,
+    }).catch(() => {});
+  }
+}
     res.json({
       success: true,
-      data: distribution,
+      message:
+        result.isPublished
+          ? "Result published"
+          : "Result unpublished",
+      data: result,
     });
   } catch (err) {
     next(err);
   }
 };
+/* ── GET GRADE DISTRIBUTION ── */
+exports.getGradeDistribution =
+  async (req, res, next) => {
+    try {
+      const results =
+        await Result.find();
+
+      const grades = {
+        O: 0,
+        "A+": 0,
+        A: 0,
+        "B+": 0,
+        B: 0,
+        C: 0,
+        F: 0,
+      };
+
+      results.forEach(
+        (result) => {
+          const percentage =
+            (result.marksObtained /
+              result.maxMarks) *
+            100;
+
+          if (
+            percentage >= 90
+          )
+            grades["O"]++;
+
+          else if (
+            percentage >= 80
+          )
+            grades["A+"]++;
+
+          else if (
+            percentage >= 70
+          )
+            grades["A"]++;
+
+          else if (
+            percentage >= 60
+          )
+            grades["B+"]++;
+
+          else if (
+            percentage >= 50
+          )
+            grades["B"]++;
+
+          else if (
+            percentage >= 40
+          )
+            grades["C"]++;
+
+          else grades["F"]++;
+        }
+      );
+
+      const distribution =
+        Object.entries(
+          grades
+        ).map(
+          ([grade, count]) => ({
+            _id: grade,
+            count,
+          })
+        );
+
+      res.json({
+        success: true,
+        data: distribution,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };

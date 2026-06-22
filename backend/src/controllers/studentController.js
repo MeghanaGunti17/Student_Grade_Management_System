@@ -111,38 +111,95 @@ exports.getMyProfile = async (req, res, next) => {
 /* ── CREATE STUDENT ── */
 exports.createStudent = async (req, res, next) => {
   try {
-    const { name, email, password, rollNumber, department, semester, section, batch, enrollmentNumber } = req.body;
+    const {
+  name,
+  email,
+  password,
+  rollNumber,
+  department,
+  semester,
+  section,
+  batch,
+  enrollmentNumber,
+  cgpa,
+  attendancePercentage,
+  riskScore
+} = req.body;
 
     if (!name || !email || !password || !rollNumber) {
       return res.status(400).json({ success: false, message: "Name, email, password and rollNumber are required" });
     }
 
-    const existingUser =
-await User.findOne({
-  email:
-    email.toLowerCase().trim(),
+    const existingUser = await User.findOne({
+  email: email.toLowerCase().trim(),
 });
-    if (existingUser) return res.status(409).json({ success: false, message: "Email already registered" });
 
-    const existingRoll = await Student.findOne({ rollNumber });
-    if (existingRoll) return res.status(409).json({ success: false, message: "Roll number already exists" });
+if (existingUser) {
+  return res.status(409).json({
+    success: false,
+    message: "Email already registered",
+  });
+}
 
-    const user = await User.create({
+const existingRoll = await Student.findOne({
+  rollNumber,
+});
+
+if (existingRoll) {
+  return res.status(409).json({
+    success: false,
+    message: "Roll number already exists",
+  });
+}
+
+const user = await User.create({
   name,
-  email:
-    email.toLowerCase().trim(),
+  email: email.toLowerCase().trim(),
   password,
   role: "student",
 });
-    const studentProfile = await Student.create({
-      user: user._id,
-      rollNumber,
-      enrollmentNumber,
-      department: department || "Computer Science",
-      semester: semester || 1,
-      section: section || "A",
-      batch: batch || "2021-2025",
-    });
+
+/* CALCULATE RISK */
+let calculatedRisk = 0;
+
+if (Number(cgpa || 0) < 6)
+  calculatedRisk += 50;
+
+if (Number(attendancePercentage || 0) < 75)
+  calculatedRisk += 50;
+
+const studentProfile = await Student.create({
+  user: user._id,
+  rollNumber,
+  enrollmentNumber,
+
+  department:
+    department || "Computer Science",
+
+  semester:
+    semester || 1,
+
+  section:
+    section || "A",
+
+  batch:
+    batch || "2021-2025",
+
+  cgpa:
+    Number(cgpa) || 0,
+
+  attendancePercentage:
+    Number(attendancePercentage) || 0,
+
+  riskScore:
+    calculatedRisk,
+});
+
+user.studentProfile = studentProfile._id;
+
+await user.save({
+  validateBeforeSave: false,
+});
 
     user.studentProfile = studentProfile._id;
     await user.save({ validateBeforeSave: false });
@@ -164,7 +221,20 @@ await User.findOne({
 /* ── UPDATE STUDENT ── */
 exports.updateStudent = async (req, res, next) => {
   try {
-    const { name, email, phone, avatar, rollNumber, department, semester, section, batch, cgpa, attendancePercentage } = req.body;
+    const {
+  name,
+  email,
+  phone,
+  avatar,
+  rollNumber,
+  department,
+  semester,
+  section,
+  batch,
+  cgpa,
+  attendancePercentage,
+  riskScore
+} = req.body;
 
     const student = await Student.findById(req.params.id).populate("user");
     if (!student) return res.status(404).json({ success: false, message: "Student not found" });
@@ -181,13 +251,22 @@ exports.updateStudent = async (req, res, next) => {
 
     // Update Student fields
     const updates = {};
+    let calculatedRisk = student.riskScore;
+
+
     if (rollNumber !== undefined) updates.rollNumber = rollNumber;
     if (department !== undefined) updates.department = department;
     if (semester !== undefined) updates.semester = semester;
     if (section !== undefined) updates.section = section;
     if (batch !== undefined) updates.batch = batch;
-    if (cgpa !== undefined) updates.cgpa = cgpa;
-    if (attendancePercentage !== undefined) updates.attendancePercentage = attendancePercentage;
+    if (cgpa !== undefined)
+  updates.cgpa = Number(cgpa);
+
+if (attendancePercentage !== undefined)
+  updates.attendancePercentage =
+    Number(attendancePercentage);
+
+
 
     const updated = await Student.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }).populate("user", "name email avatar phone");
 

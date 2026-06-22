@@ -7,11 +7,39 @@ import toast   from 'react-hot-toast';
 const DEPTS = ['Computer Science','Electronics','Mechanical','Civil','Electrical','Information Technology'];
 
 function StudentModal({ open, onClose, onSave, initial }) {
-  const [form, setForm] = useState(initial || { name:'', email:'', password:'', rollNumber:'', department:'Computer Science', semester:1, section:'A', batch:'2021-2025' });
+  const [form, setForm] = useState(
+  initial || {
+    name:'',
+    email:'',
+    password:'',
+    rollNumber:'',
+    department:'Computer Science',
+    semester:1,
+    section:'A',
+    batch:'2021-2025',
+    cgpa:0,
+    attendancePercentage:0
+  }
+);
   const [loading, setLoading] = useState(false);
   const isEdit = !!initial?._id;
 
-  useEffect(() => { setForm(initial || { name:'', email:'', password:'', rollNumber:'', department:'Computer Science', semester:1, section:'A', batch:'2021-2025' }); }, [initial, open]);
+  useEffect(() => {
+  setForm(
+    initial || {
+      name:'',
+      email:'',
+      password:'',
+      rollNumber:'',
+      department:'Computer Science',
+      semester:1,
+      section:'A',
+      batch:'2021-2025',
+      cgpa:0,
+      attendancePercentage:0
+    }
+  );
+}, [initial, open]);
   if (!open) return null;
 
   const set = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -45,6 +73,21 @@ function StudentModal({ open, onClose, onSave, initial }) {
             { name:'rollNumber',  label:'Roll Number *',  type:'text',   placeholder:'21CS001',        span:1 },
             { name:'section',     label:'Section',        type:'text',   placeholder:'A',              span:1 },
             { name:'batch',       label:'Batch',          type:'text',   placeholder:'2021-2025',      span:1 },
+            {
+  name:'cgpa',
+  label:'CGPA',
+  type:'number',
+  placeholder:'0 - 10',
+  span:1
+},
+
+{
+  name:'attendancePercentage',
+  label:'Attendance %',
+  type:'number',
+  placeholder:'0 - 100',
+  span:1
+},
           ].map(f => (
             <div key={f.name} className="input-group" style={{ gridColumn: f.span===2 ? '1/-1' : 'auto' }}>
               <label className="input-label">{f.label}</label>

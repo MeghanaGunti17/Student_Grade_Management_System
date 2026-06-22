@@ -61,6 +61,12 @@ router.post(
   authorize("admin"),
   createStudent
 );
+router.post(
+  "/",
+  protect,
+  authorize("admin", "faculty"),
+  createStudent
+);
 
 /* UPDATE STUDENT */
 router.put(
@@ -69,12 +75,24 @@ router.put(
   authorize("admin"),
   updateStudent
 );
+router.put(
+  "/:id",
+  protect,
+  authorize("admin", "faculty"),
+  updateStudent
+);
 
 /* DELETE STUDENT */
 router.delete(
   "/:id",
   protect,
   authorize("admin"),
+  deleteStudent
+);
+router.delete(
+  "/:id",
+  protect,
+  authorize("admin", "faculty"),
   deleteStudent
 );
 

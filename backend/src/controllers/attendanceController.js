@@ -1,6 +1,6 @@
 const Attendance = require("../models/Attendance");
 const Student = require("../models/Student");
-
+const analyticsService = require("../services/analyticsService");
 /* =========================
    MARK SINGLE ATTENDANCE
 ========================= */
@@ -27,6 +27,7 @@ const markAttendance = async (
           subject: subjectId,
           date: new Date(date),
         },
+        
         {
           student: studentId,
           studentName,
@@ -43,7 +44,9 @@ const markAttendance = async (
           new: true,
         }
       );
-
+await analyticsService.updateAttendancePercentage(
+  studentId
+);
     res.status(201).json({
       success: true,
       message:
@@ -105,7 +108,9 @@ const bulkMarkAttendance =
               new: true,
             }
           );
-
+          await analyticsService.updateAttendancePercentage(
+  record.studentId
+);
           success++;
         } catch (error) {
           failed++;

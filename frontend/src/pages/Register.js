@@ -17,7 +17,10 @@ export default function Register() {
     if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
-      const { data } = await axios.post('https://campusiq-backend-5tb3.onrender.com/api/auth/register', form);
+      const { data } = await API.post(
+ "/auth/login",
+ form
+);
       if (data.success) {
         toast.success('Account created! Please sign in 🎉');
         navigate('/login');
